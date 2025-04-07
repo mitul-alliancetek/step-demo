@@ -18,6 +18,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from 'src/components/table/table-no-data';
 import { TableEmptyRows } from 'src/components/table/table-empty-rows';
+import { DeleteDialog } from 'src/components/delete-dialog';
 
 import { emptyRows } from '../utils';
 import { DocumentTableRow } from '../document-table-row';
@@ -26,6 +27,8 @@ import { DocumentTableToolbar } from '../document-table-toolbar';
 
 import type { DocumentProps } from '../document-table-row';
 import { DocumentForm } from './document-form';
+
+
 
 
 type PageInfo = {
@@ -49,21 +52,23 @@ type PageInfo = {
 export function DocumentView() {
   const table = useTable();
   const [pageData, setPageData] = useState<PageInfo | null>(null);
-  const [filterName, setFilterName] = useState('');
-  const {page, rowsPerPage, orderBy, order } = table
+  const [searchText, setSearchText] = useState('');
+  const { page, rowsPerPage, orderBy, order, setPage } = table
   const [formData, setFormData] = useState({
     isOpen: false,
     id: 0
   })
+  const [deleteId, setDeleteId] = useState(0)
   useEffect(() => {
     getPageData();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, rowsPerPage, orderBy, order]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, rowsPerPage, orderBy, order, searchText]);
+
 
   const getPageData = async () => {
     try {
-      const _documents: PageInfo = await ApiHelper.get(`/documents?page=${page}&per_page=${rowsPerPage}&order_by=${orderBy}&order_direction=${order}`);
+      const _documents: PageInfo = await ApiHelper.get(`/documents?page=${page}&per_page=${rowsPerPage}&order_by=${orderBy}&order_direction=${order}&search=${searchText}`);
       setPageData(_documents)
     } catch (e) {
       alert(e);
@@ -79,20 +84,26 @@ export function DocumentView() {
       getPageData();
     }
   }
-  const onEditRow = (id: number) =>{
+  const onEditRow = (id: number) => {
     setFormData({
       isOpen: true,
       id
     })
   }
-  const onDeleteRow = async (id: number) =>{
+  const onDeleteRow = async (id: number) => {
+    setDeleteId(id)
+  }
+
+  const handleDeleteConfirm = async () => {
     try {
-      await ApiHelper.delete(`/documents/${id}`);
+      await ApiHelper.delete(`/documents/${deleteId}`);
+      setDeleteId(0)
       getPageData()
     } catch (e) {
       alert(e);
     }
   }
+
   return (
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
@@ -113,9 +124,9 @@ export function DocumentView() {
         <Card>
           <DocumentTableToolbar
             numSelected={table.selected.length}
-            filterName={filterName}
+            filterName={searchText}
             onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setFilterName(event.target.value);
+              setSearchText(event.target.value);
               table.onResetPage();
             }}
           />
@@ -154,7 +165,7 @@ export function DocumentView() {
                     emptyRows={emptyRows(table.page, table.rowsPerPage, _users.length)}
                   />
 
-                  {pageData?.data.length === 0 && <TableNoData searchQuery={filterName} />}
+                  {pageData?.data.length === 0 && <TableNoData searchQuery={searchText} />}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -163,7 +174,7 @@ export function DocumentView() {
 
           <TablePagination
             component="div"
-            page={pageData.current_page -1}
+            page={pageData.current_page - 1}
             count={pageData.total}
             rowsPerPage={pageData.per_page}
             onPageChange={table.onChangePage}
@@ -176,6 +187,12 @@ export function DocumentView() {
       <DocumentForm isOpen={formData.isOpen}
         id={formData.id}
         close={handleClose} />
+      <DeleteDialog
+        deleteConfirmOpen={deleteId !== 0}
+        handleDeleteCancel={() => onDeleteRow(0)}
+        handleDeleteConfirm={handleDeleteConfirm}
+      />
+
     </DashboardContent>
   );
 }
@@ -237,6 +254,7 @@ export function useTable() {
     page,
     order,
     onSort,
+    setPage,
     orderBy,
     selected,
     rowsPerPage,

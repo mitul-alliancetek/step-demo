@@ -10,6 +10,9 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { Iconify } from 'src/components/iconify';
+import styled from '@emotion/styled';
+import { Badge, Chip } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 
 
 export type DocumentProps = {
@@ -17,7 +20,7 @@ export type DocumentProps = {
   name: string;
   current_language: string;
   process_language: string;
-  status: string;
+  status: 'Completed' | 'Pending' | 'Rejected' | 'Inprogress';
 };
 
 type DocumentTableRowProps = {
@@ -27,6 +30,12 @@ type DocumentTableRowProps = {
   onDeleteRow: () => void;
 };
 
+const STATUS_COLOR = {
+  'Completed': '#4CAF50',
+  'Pending': '#FF9800',
+  'Rejected': '#F44336',
+  'Inprogress': '#2196F3',
+};
 export function DocumentTableRow({ row, selected, onEditRow, onDeleteRow }: DocumentTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
 
@@ -64,7 +73,7 @@ export function DocumentTableRow({ row, selected, onEditRow, onDeleteRow }: Docu
         <TableCell>{row.process_language}</TableCell>
 
         <TableCell>
-          {row.status}
+          <Chip label={row.status} style={{ background: STATUS_COLOR[row.status] }} />
         </TableCell>
 
 

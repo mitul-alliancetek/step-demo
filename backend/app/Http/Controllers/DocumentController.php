@@ -14,21 +14,19 @@ class DocumentController extends Controller
     public function index(Request $request)
     {
         $per_page = $request->query('per_page', 10);
-        $status = $request->query('status', "");
         $order_by = $request->query('order_by', 'id');
         $order_direction = strtolower($request->query('order_direction', 'desc'));
-
+        $search_name = $request->query('search', "");
         // Validate order direction
         $order_direction = in_array($order_direction, ['asc', 'desc']) ? $order_direction : 'desc';
         $allowed_orders = ['id', 'created_at', 'updated_at', 'status'];
         $order_by = in_array($order_by, $allowed_orders) ? $order_by : 'id';
 
         $query = Document::query();
-
-        if ($status !== "") {
-            $query->where('status', $status);
+        if ($search_name !== "") {
+            $query->where('name', 'like', '%' . $search_name . '%');
         }
-
+        
         $docs = $query->orderBy($order_by, $order_direction)->paginate($per_page);
 
         return response()->json([

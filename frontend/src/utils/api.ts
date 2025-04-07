@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://192.168.1.9:8000/api"; // Replace with your API URL
+const API_BASE_URL = "http://192.168.1.4:8000/api"; // Replace with your API URL
 
 // Create an Axios instance
 const ApiHelper = axios.create({
